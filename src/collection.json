@@ -1,0 +1,17 @@
+{
+  "$schema": "../node_modules/@angular-devkit/schematics/collection-schema.json",
+  "schematics": {
+    "root-store": {
+      "aliases": ["rs"],
+      "description": "Creates an Angular module that implements the root state store of the application",
+      "factory": "./root-store/index",
+      "schema": "./root-store/schema.json"
+    },
+    "feature-store": {
+      "aliases": ["fs"],
+      "description": "Creates a feature state store module",
+      "factory": "./feature-store/index",
+      "schema": "./feature-store/schema.json"
+    }
+  }
+}

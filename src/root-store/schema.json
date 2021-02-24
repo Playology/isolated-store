@@ -1,0 +1,19 @@
+{
+    "$schema": "http://json-schema.org/schema",
+    "id": "root-store-schema",
+    "title": "Root Store Schematic Schema",
+    "type": "object",
+    "description": "Creates a root NgRx store for the application in accordance with the pattern described at http://github.com/ngxtend/isolated-store",
+    "properties": {
+        "name": {
+            "type": "string",
+            "description": "Name to use for the module, defaults to [root-store]",
+            "default": "root-store"
+        },
+        "project": {
+            "type": "string",
+            "description": "The project to add the module to, defaults to the default project, usually app",
+            "defaut": "defaultProject"
+        }
+    }
+}
