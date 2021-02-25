@@ -57,7 +57,7 @@ After running the above the VS Code workspace structure looks like this
 
 
 #### root-store.module.ts
-The Root Store is little more than an Angular module that acts as a single point of entry for application state.  It initialised NgRx with root StoreModule and EffectsModule imports.  The module definition looks like this
+The Root Store is little more than an Angular module that acts as a single point of entry for application state.  It initialises NgRx with root StoreModule and EffectsModule imports.  The module definition looks like this
 ```typescript
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -178,70 +178,60 @@ export const initialAuthState: AuthState = {
     isInitialised: false
 };
 
-export function authStoreReducer(state: AuthState = initialAuthState, action: AuthStoreActions) {
-    switch(action.type) {
-        case AuthStoreActionTypes.InitialiseModuleSucceeded:
-            return {
+const reducter = createReducer(initialAuthState,
+  On(initialiseModuleSucceeded, (state: AuthState) => ({
                 ...state,
                 isInitialised: true
-            };
-            
-        default:
-            return state;
-    }
-}
+            }))
+    );
+
+export const authStoreReducer = (state: AuthState | undefined, action: Action): AuthState = reducer(state, action);
 ```
 
 #### auth-store.efects.ts
 This provides a base Effects service for the feature store, with an example of a simple effect that deals with dispatching an action when an action with side effects is triggered. This is imported into the feature store module and used to initialise an effects module.
 ```typescript
 import { Injectable } from '@angular/core';
-import { Actions, Effect, ofType } from '@ngrx/effects';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Store } from '@ngrx/store';
 import { catchError, exhaustMap } from 'rxjs/operators';
 import { EMPTY, of } from 'rxjs';
 
 import { AuthState } from './auth-store.reducer';
-import { InitialiseModule, InitialiseModuleSucceeded, AuthStoreActionTypes } from './auth-store.actions';
+import { initialiseModule, initialiseModuleSucceeded } from './auth-store.actions';
 
 @Injectable()
 export class AuthStoreEffects {
-  constructor(
-    private actions$: Actions,
-    private store: Store<AuthState>
-  ) { }
-
-  @Effect()
-  initialiseModule$ = this.actions$.pipe(
-    ofType<InitialiseModule>(AuthStoreActionTypes.InitialiseModule),
-    exhaustMap(a => of(new InitialiseModuleSucceeded())),
+  
+  initialiseModule$ = createEffect(() => this.actions$.pipe(
+    ofType(nitialiseModule),
+    exhaustMap(a => of(initialiseModuleSucceeded())),
     catchError(e => {
       console.log(e);
       return EMPTY;
     })
   );
+
+  constructor(
+    private actions$: Actions,
+    private store: Store<AuthState>
+  ) { }
 }
 ```
 
 #### auth-store.actions.ts
 This defines the actions supported by the feature store and its elements are imported into the reducer and effects files shown above
 ```typescript
-import { Action } from '@ngrx/store';
+import { createAction } from '@ngrx/store';
 
 export enum AuthStoreActionTypes {
     InitialiseModule = '[Auth] Initialise module',
     InitialiseModuleSucceeded = '[Auth] Initialise module succeeded'
 }
 
-export class InitialiseModule implements Action {
-    readonly type: string = AuthStoreActionTypes.InitialiseModule;
-}
+export const initialiseModule = createAction(AuthStoreActionTypes.InitialiseModule);
 
-export class InitialiseModuleSucceeded implements Action {
-    readonly type: string = AuthStoreActionTypes.InitialiseModuleSucceeded;
-}
-
-export type AuthStoreActions = InitialiseModule | InitialiseModuleSucceeded;
+export const initialiseModuleSucceeded = createAction(AuthStoreActionTypes.InitialiseModuleSucceeded);
 ```
 
 #### auth-store.selectors.ts
@@ -270,7 +260,7 @@ import { AuthState } from './auth-store.reducer';
 import { getIsInitialised } from './auth-store.selectors';
 
 export interface IAuthStoreFacade {
-  isInitialised(): Observable<boolean>;
+  isInitialised$: Observable<boolean>;
 }
 
 @Injectable({
@@ -279,7 +269,7 @@ export interface IAuthStoreFacade {
 export class AuthStoreFacade implements IAuthStoreFacade {
   constructor(private store: Store<AuthState>) {}
 
-  public isInitialised(): Observable<boolean> {
+  public get isInitialised$(): Observable<boolean> {
     return this.store.pipe(select(getIsInitialised));
   }
 }
@@ -353,9 +343,9 @@ import { NotificationService } from '../../shared/notification.service';
 
 import { AuthState } from './auth-store.reducer';
 import {
-  SignInAction,
-  SignOutAction,
-  SilentSignInAction,
+  signInAction,
+  signOutAction,
+  silentSignInAction,
 } from './auth-store.actions';
 import {
   getIsAuthenticated,
@@ -388,19 +378,19 @@ export class AuthStoreFacade {
   }
 
   public signInFailed(): Observable<string> {
-    return this.signInFailedSubject;
+    return this.signInFailedSubject.asObservable();
   }
 
   public signInSucceeded(): Observable<void> {
-    return this.signInSucceededSubject;
+    return this.signInSucceededSubject.asObservable();
   }
 
   public signOutSucceeded(): Observable<void> {
-    return this.signOutSucceededSubject;
+    return this.signOutSucceededSubject.asObservable();
   }
 
   public silentSignInCompleted(): Observable<boolean> {
-    return this.silentSignInCompletedSubject;
+    return this.silentSignInCompletedSubject.asObservable();
   }
 
   public notifySignInFailed(error: string): void {
@@ -420,15 +410,15 @@ export class AuthStoreFacade {
   }
 
   public signIn(): void {
-    this.store.dispatch(new SignInAction());
+    this.store.dispatch(signInAction());
   }
 
   public signOut(): void {
-    this.store.dispatch(new SignOutAction());
+    this.store.dispatch(signOutAction());
   }
 
   public trySilentSignIn(): void {
-    this.store.dispatch(new SilentSignInAction());
+    this.store.dispatch(silentSignInAction());
   }
 
   public userDisplayName(): Observable<string> {
@@ -448,7 +438,7 @@ export class AuthStoreFacade {
 
 #### auth-store.action.ts
 ```typescript
-import { Action } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 import { auth } from 'firebase/app';
 
 export enum AuthStoreActionTypes {
@@ -462,56 +452,28 @@ export enum AuthStoreActionTypes {
   SilentSignInFailed = '[Auth] - Silent Sign Sign In Failed'
 }
 
-export class SignInAction implements Action {
-  type: string = AuthStoreActionTypes.SignIn;
-}
+export const signInAction = createAction(AuthStoreActionTypes.SignIn);
 
-export class SignInSucceededAction implements Action {
-  type: string = AuthStoreActionTypes.SignInSucceeded;
-  constructor(readonly payload: auth.UserCredential) {}
-}
+export const signInSucceededAction = createAction(AuthStoreActionTypes.SignInSucceeded, props<{ payload: auth.UserCredential }>);
 
-export class SignInFailedAction implements Action {
-  readonly type: string = AuthStoreActionTypes.SignInFailed;
-  constructor(readonly payload: string) {}
-}
+export const signInFailedAction = createAction(AuthStoreActionTypes.SignInFailed, props<{ payload: string }>);
 
-export class SignOutAction implements Action {
-  readonly type: string = AuthStoreActionTypes.SignOut;
-}
+export const signOutAction = createAction(AuthStoreActionTypes.SignOut);
 
-export class SignOutCompletedAction implements Action {
-  readonly type: string = AuthStoreActionTypes.SignOutCompleted;
-}
+export const signOutCompletedAction = createAction(AuthStoreActionTypes.SignOutCompleted);
 
-export class SilentSignInAction implements Action {
-  readonly type: string = AuthStoreActionTypes.SilentSignIn;
-}
+export const silentSignInAction = createAction(AuthStoreActionTypes.SilentSignIn);
 
-export class SilentSignInSucceededAction implements Action {
-  type: string = AuthStoreActionTypes.SilentSignInSucceeded;
-  constructor(readonly payload: firebase.User) {}
-}
+export const silentSignInSucceededAction = createAction(AuthStoreActionTypes.SilentSignInSucceeded, props<{ payload: firebase.User }>);
 
-export class SilentSignInFailedAction implements Action {
-  readonly type: string = AuthStoreActionTypes.SilentSignInFailed;
-}
-
-export type AuthStoreActions =
-  | SignInAction
-  | SignInSucceededAction
-  | SignInFailedAction
-  | SignOutCompletedAction
-  | SilentSignInAction
-  | SilentSignInSucceededAction;
+export const silentSignInFailedAction = createAction(AuthStoreActionTypes.SilentSignInFailed);
 
 ```
 
 #### auth-store.effects.ts
 ```typescript
 import { Injectable } from '@angular/core';
-import { Actions, Effect, ofType } from '@ngrx/effects';
-import { Action } from '@ngrx/store';
+import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { Observable, of, from, EMPTY } from 'rxjs';
 import { catchError, map, tap, switchMap } from 'rxjs/operators';
 import { AngularFireAuth } from '@angular/fire/auth';
@@ -519,84 +481,72 @@ import { auth } from 'firebase/app';
 
 import { AuthStoreFacade } from './auth-store-facade.service';
 import {
-  SignInAction,
-  AuthStoreActionTypes,
-  SignInSucceededAction,
-  SignInFailedAction,
-  SignOutAction,
-  SignOutCompletedAction,
-  SilentSignInAction,
-  SilentSignInSucceededAction,
-  SilentSignInFailedAction
+  signInAction,
+  signInSucceededAction,
+  signInFailedAction,
+  signOutAction,
+  signOutCompletedAction,
+  silentSignInAction,
+  silentSignInSucceededAction,
+  silentSignInFailedAction
 } from './auth-store.actions';
 
 @Injectable()
 export class AuthStoreEffects {
-  constructor(
-    private actions$: Actions,
-    private authStoreFacade: AuthStoreFacade,
-    private afAuth: AngularFireAuth
-  ) {}
-
-  @Effect({ dispatch: false })
-  signIn$: Observable<Action> = this.actions$.pipe(
-    ofType<SignInAction>(AuthStoreActionTypes.SignIn),
+  
+  signIn$ = createEffect(() => this.actions$.pipe(
+    ofType(signInAction),
     switchMap(() => {
       return from(this.afAuth.signInWithPopup(new auth.GoogleAuthProvider()));
     }),
-    map(credential => new SignInSucceededAction(credential)),
+    map(credential => signInSucceededAction({payload: credential })),
     catchError(e => {
       console.error(e.message);
-      return of(new SignInFailedAction(e.message));
+      return of(signInFailedAction({ payload: e.message }));
     })
-  );
+  ));
 
-  @Effect({ dispatch: false })
-  signInSucceeded$: Observable<Action> = this.actions$.pipe(
-    ofType<SignInSucceededAction>(AuthStoreActionTypes.SignInSucceeded),
+  signInSucceeded$ = createEffect(() => this.actions$.pipe(
+    ofType(signInSucceededAction),
     tap(() => this.authStoreFacade.notifySignInSucceeded())
-  );
+  ), { dispatch: false });
 
-  @Effect({ dispatch: false })
-  signInFailure$: Observable<Action> = this.actions$.pipe(
-    ofType<SignInFailedAction>(AuthStoreActionTypes.SignInFailed),
-    tap((a: SignInFailedAction) => this.authStoreFacade.notifySignInFailed(a.payload))
-  );
+  signInFailure$ = createEffect(() => this.actions$.pipe(
+    ofType(signInFailedAction),
+    tap((a: signInFailedAction) => this.authStoreFacade.notifySignInFailed(a.payload))
+  ), { dispatch: false });
 
-  @Effect()
-  signOut$: Observable<Action> = this.actions$.pipe(
-    ofType<SignOutAction>(AuthStoreActionTypes.SignOut),
+  signOut$ = createEffect(() => this.actions$.pipe(
+    ofType(signOutAction),
     switchMap(() => {
       return from(this.afAuth.signOut());
     }),
-    map(() => new SignOutCompletedAction()),
+    map(() => signOutCompletedAction()),
     catchError(e => {
       console.error(e.message);
       return EMPTY;
     })
-  );
+  ));
 
-  @Effect({ dispatch: false })
-  signOutComplete$: Observable<Action> = this.actions$.pipe(
-    ofType<SignOutCompletedAction>(AuthStoreActionTypes.SignOutCompleted),
+  signOutComplete$ = createEffect(() => this.actions$.pipe(
+    ofType(signOutCompletedAction),
     tap(() => {
       this.authStoreFacade.notifySignOutSucceeded();
     })
-  );
+  ), { dispatch: false });
 
-  @Effect()
-  silentSignIn$: Observable<Action> = this.actions$.pipe(
-    ofType<SilentSignInAction>(AuthStoreActionTypes.SilentSignIn),
+  silentSignIn$ = createEffect(() => this.actions$.pipe(
+    ofType(silentSignInAction),
     switchMap(() => {
       return this.afAuth.authState;
     }),
     map(user => {
       if (user) {
         this.authStoreFacade.notifySilentSignInCompleted(true);
-        return new SilentSignInSucceededAction(user);
+        return silentSignInSucceededAction({ payload: user });
       } else {
         this.authStoreFacade.notifySilentSignInCompleted(false);
-        return new SilentSignInFailedAction();
+        return silentSignInFailedAction();
       }
     }),
     catchError(e => {
@@ -604,19 +554,24 @@ export class AuthStoreEffects {
       return EMPTY;
     })
   );
+
+  constructor(
+    private actions$: Actions,
+    private authStoreFacade: AuthStoreFacade,
+    private afAuth: AngularFireAuth
+  ) {}
 }
 
 ```
 
 #### auth-store.reducer.ts
 ```typescript
+import { createReducer, on } from '@ngrx/store';
 import { auth } from 'firebase/app';
 
 import {
-  AuthStoreActions,
-  AuthStoreActionTypes,
-  SignInSucceededAction,
-  SilentSignInSucceededAction
+  signInSucceededAction,
+  silentSignInSucceededAction
 } from './auth-store.actions';
 
 export interface AuthState {
@@ -635,38 +590,25 @@ export const initialAuthStoreState: AuthState = {
   pictureUrl: ''
 };
 
-export function authStoreReducer(
-  state = initialAuthStoreState,
-  action: AuthStoreActions
-): AuthState {
-  function mapUserToState(user: firebase.User | null): AuthState {
-    return {
-      ...state,
-      isAuthenticated: true,
-      userId: user?.uid ?? '',
-      email: user?.email ?? '',
-      displayName: user?.displayName ?? '',
-      pictureUrl: user?.photoURL ?? ''
-    };
-  }
+const reducer = createReducer(initialAuthStoreState,
+  on(signInSuccessAction, (state: AuthState, { payload }) => mapUserToState(payload)),
+  on(signInFailedAction, (state: AuthState) => Object.assign({}. initialAuthStoreState)),
+  on(signOutCompletedAction, (state: AuthState) => Object.assign({}. initialAuthStoreState)),
+  on(silentSignInFailedAction, (state: AuthState) => Object.assign({}. initialAuthStoreState)),
+  on(silentSignInSucceededAction, (state: AuthState, { payload }) => mapUserToState(payload)),
+);
 
-  switch (action.type) {
-    case AuthStoreActionTypes.SignInSucceeded:
-      const signInSuccessAction = action as SignInSucceededAction;
-      return mapUserToState(signInSuccessAction.payload.user);
-
-    case AuthStoreActionTypes.SignInFailed:
-    case AuthStoreActionTypes.SignOutCompleted:
-    case AuthStoreActionTypes.SilentSignInFailed:
-      return Object.assign({}, initialAuthStoreState);
-
-    case AuthStoreActionTypes.SilentSignInSucceeded:
-      const silentSignInSucceededAction = action as SilentSignInSucceededAction;
-      return mapUserToState(silentSignInSucceededAction.payload);
-
-    default:
-      return state;
-  }
+export const authStoreReducer = (state: AuthState | undefined, action: Action): AuthState => reducer(state, action);
+  
+function mapUserToState(user: firebase.User | null): AuthState {
+  return {
+    ...state,
+    isAuthenticated: true,
+    userId: user?.uid ?? '',
+    email: user?.email ?? '',
+    displayName: user?.displayName ?? '',
+    pictureUrl: user?.photoURL ?? ''
+  };
 }
 
 ```

@@ -6,7 +6,7 @@ import { <%= classify(feature) %>State } from './<%= dasherize(storename) %>.red
 import { getIsInitialised } from './<%= dasherize(storename) %>.selectors';
 
 export interface I<%= classify(storename) %>Facade {
-  isInitialised(): Observable<boolean>;
+  isInitialised$: Observable<boolean>;
 }
 
 @Injectable({

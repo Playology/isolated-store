@@ -10,7 +10,7 @@ export const initial<%= classify(feature) %>State: <%= classify(feature) %>State
 };
 
 const reducer =  createReducer(initial<%= classify(feature) %>State,
-    on(initialiseModuleSucceeded, (state) => ({
+    on(initialiseModuleSucceeded, (state: <%= classify(feature) %>State) => ({
         ...state,
         isInitialised: true
     }))
