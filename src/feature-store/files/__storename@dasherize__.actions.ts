@@ -1,4 +1,4 @@
-import { createAction } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 
 export enum <%= classify(storename) %>ActionTypes {
     InitialiseModule = '[<%= classify(feature) %>] Initialise module',

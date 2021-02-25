@@ -163,10 +163,10 @@ export class AuthStoreModule {}
 
 ```
 
-#### auth-store.recucer.ts
+#### auth-store.reducer.ts
 This defines the slice of state for the module and initialises a *reducer* for the feature store and is imported into the module shown above.  Notice we have an  *isInitialised* property on our state.  This is used throughout the module to provide simple examples of how the files are used.
 ```typescript
-import { AuthStoreActions, AuthStoreActionTypes } from './auth-store.actions';
+import { createReducer, on } from '@ngrx/store';
 
 export interface AuthState {
     isInitialised: boolean;
@@ -177,7 +177,7 @@ export const initialAuthState: AuthState = {
 };
 
 const reducter = createReducer(initialAuthState,
-  On(initialiseModuleSucceeded, (state: AuthState) => ({
+  on(initialiseModuleSucceeded, (state: AuthState) => ({
                 ...state,
                 isInitialised: true
             }))
@@ -220,7 +220,7 @@ export class AuthStoreEffects {
 #### auth-store.actions.ts
 This defines the actions supported by the feature store and its elements are imported into the reducer and effects files shown above
 ```typescript
-import { createAction } from '@ngrx/store';
+import { createAction, props } from '@ngrx/store';
 
 export enum AuthStoreActionTypes {
     InitialiseModule = '[Auth] Initialise module',
@@ -452,9 +452,9 @@ export enum AuthStoreActionTypes {
 
 export const signInAction = createAction(AuthStoreActionTypes.SignIn);
 
-export const signInSucceededAction = createAction(AuthStoreActionTypes.SignInSucceeded, props<{ payload: auth.UserCredential }>);
+export const signInSucceededAction = createAction(AuthStoreActionTypes.SignInSucceeded, props<{ payload: auth.UserCredential }>());
 
-export const signInFailedAction = createAction(AuthStoreActionTypes.SignInFailed, props<{ payload: string }>);
+export const signInFailedAction = createAction(AuthStoreActionTypes.SignInFailed, props<{ payload: string }>());
 
 export const signOutAction = createAction(AuthStoreActionTypes.SignOut);
 
@@ -462,7 +462,7 @@ export const signOutCompletedAction = createAction(AuthStoreActionTypes.SignOutC
 
 export const silentSignInAction = createAction(AuthStoreActionTypes.SilentSignIn);
 
-export const silentSignInSucceededAction = createAction(AuthStoreActionTypes.SilentSignInSucceeded, props<{ payload: firebase.User }>);
+export const silentSignInSucceededAction = createAction(AuthStoreActionTypes.SilentSignInSucceeded, props<{ payload: firebase.User }>());
 
 export const silentSignInFailedAction = createAction(AuthStoreActionTypes.SilentSignInFailed);
 
