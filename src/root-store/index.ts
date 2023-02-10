@@ -13,7 +13,6 @@ import {
 import { strings } from '@angular-devkit/core';
 import { normalize } from 'path';
 
-import { RootStoreSchema } from './schema';
 import {
   getAngularWorkspaceSchema,
   getAngularProject,
@@ -22,7 +21,7 @@ import {
   createNodePackageInstallRule
 } from '../schematic-utilities';
 
-export default function rootStore(options: RootStoreSchema): Rule {
+export default function rootStore(options: any): Rule {
   return (tree: Tree, _context: SchematicContext) => {
     const angularWorkspace = getAngularWorkspaceSchema(tree);
     const project = getAngularProject(angularWorkspace, options.project);

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema",
-  "id": "feature-store-schema",
+  "$id": "feature-store-schema",
   "title": "Feature Store Schematic Schema",
   "type": "object",
   "description": "Creates an NgRx feature store in accordance with the pattern described at http://github.com/ngxtend/isolated-store",

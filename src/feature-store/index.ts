@@ -13,7 +13,6 @@ import {
 } from '@angular-devkit/schematics';
 import { strings } from '@angular-devkit/core';
 
-import { FeatureStoreSchema } from './schema';
 import {
   getAngularWorkspaceSchema,
   getAngularProject,
@@ -22,7 +21,7 @@ import {
   createUpdateRootStoreModuleRule
 } from '../schematic-utilities';
 
-export default function featureStore(options: FeatureStoreSchema): Rule {
+export default function featureStore(options: any): Rule {
   if(!options.storename) {
     options.storename = options.feature + 'Store';
   }

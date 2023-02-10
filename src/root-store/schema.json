@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/schema",
-    "id": "root-store-schema",
+    "$id": "root-store-schema",
     "title": "Root Store Schematic Schema",
     "type": "object",
     "description": "Creates a root NgRx store for the application in accordance with the pattern described at http://github.com/ngxtend/isolated-store",
