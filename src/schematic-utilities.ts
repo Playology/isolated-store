@@ -202,12 +202,16 @@ export function getAngularProject(
 
   let projectCount = 0;
   let applicationCount = 0;
+  let firstProject: WorkspaceProject | null = null;
   let firstApplicationProject: WorkspaceProject | null = null;
   for(const key in workspace.projects) {
     if(workspace.projects.hasOwnProperty(key)) {
-      projectCount++;
-
       const project = workspace.projects[key];
+      projectCount++;
+      if(projectCount === 1) {
+        firstProject = project;
+      }
+
       if(project.projectType === 'application') {
         applicationCount++;
         if(!firstApplicationProject) {
