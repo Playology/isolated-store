@@ -48,7 +48,7 @@ export function containsNgModuleImport(file: SourceFile, moduleToken: string): b
 }
 
 export function createFilterSpecsRule(includeSpecs: boolean) {
-  return includeSpecs ? noop() : filter(path => !path.endsWith('spec.ts'));
+  return includeSpecs ? noop() : filter((path: string) => !path.endsWith('spec.ts'));
 }
 
 export function createNodePackageInstallRule(packageId: string, callback?: (taskId: TaskId) => void): Rule {
@@ -59,11 +59,11 @@ export function createNodePackageInstallRule(packageId: string, callback?: (task
 
     packageJson.forEachChild((node: Node) => {
       if (node.kind === SyntaxKind.ExpressionStatement) {
-        node.forEachChild(objectLiteral => {
-          objectLiteral.forEachChild(property => {
-            if (property.getFullText().includes('dependencies')) {
-              property.forEachChild(dependency => {
-                if (dependency.getFullText().includes(packageId)) {
+        node.forEachChild((o: any) => {
+          o.forEachChild((p: any) => {
+            if (p.getFullText().includes('dependencies')) {
+              p.forEachChild((d: any) => {
+                if (d.getFullText().includes(packageId)) {
                   _context.logger.info(`${packageId} is already installed`);
                   isPackageInstalled = true;
                 }
@@ -190,12 +190,42 @@ export function getAngularProject(
   workspace: WorkspaceSchema,
   name?: string
 ): WorkspaceProject {
-  let actualName: string = name as string;
-  if (!actualName || actualName === 'defaultProject') {
-    actualName = workspace.defaultProject as string;
+
+  const actualName: string = name as string;
+  if(actualName && actualName !== 'defaultProject') {
+    return workspace.projects[actualName];
   }
 
-  return workspace.projects[actualName];
+  if(actualName === 'defaultProject' && workspace.defaultProject) {
+    return workspace.projects[workspace.defaultProject];
+  }
+
+  let projectCount = 0;
+  let applicationCount = 0;
+  let firstApplicationProject: WorkspaceProject | null = null;
+  for(const key in workspace.projects) {
+    if(workspace.projects.hasOwnProperty(key)) {
+      projectCount++;
+
+      const project = workspace.projects[key];
+      if(project.projectType === 'application') {
+        applicationCount++;
+        if(!firstApplicationProject) {
+          firstApplicationProject = project;
+        }
+      }
+    }
+  }
+
+  if(projectCount === 1) {
+    return workspace.projects[0];
+  }
+
+  if(applicationCount === 1) {
+    return firstApplicationProject as WorkspaceProject;
+  }
+
+  throw new SchematicsException('The workspace has multiple projects and an appropriate project could not be determined automatically.  Please specify the project to use.');
 }
 
 export function getAngularWorkspaceSchema(tree: Tree): WorkspaceSchema {
