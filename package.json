@@ -1,6 +1,6 @@
 {
   "name": "@ngxtend/isolated-store",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A set of schematics for using Angular and NgRx applying the Isolated Store pattern described at https://github.com/ngxtend/isolated-store",
   "scripts": {
     "build": "tsc",

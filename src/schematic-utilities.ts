@@ -222,7 +222,7 @@ export function getAngularProject(
   }
 
   if(projectCount === 1) {
-    return workspace.projects[0];
+    return firstProject as WorkspaceProject;
   }
 
   if(applicationCount === 1) {
